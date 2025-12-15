@@ -1,0 +1,95 @@
+# EJEMPLOS DE USO - ML SERVICE v3.0 (Multimodal)
+
+## CLUSTERING (igual que antes)
+
+### 1. Entrenar Clustering
+POST http://localhost:8003/api/v1/clustering/train
+
+Response:
+{
+  "total_cattle": 90,
+  "clusters_created": 4,
+  "cluster_distribution": {...},
+  "message": "Modelo entrenado exitosamente"
+}
+
+### 2. Predecir Cluster
+GET http://localhost:8003/api/v1/clustering/predict/{cattle_id}
+
+
+## FORECASTING MULTIMODAL (NUEVO)
+
+### 3. Entrenar Modelos de Forecasting
+POST http://localhost:8003/api/v1/forecasting/train
+
+Response:
+{
+  "total_records": 120,
+  "features_count": 19,
+  "message": "Modelos entrenados exitosamente"
+}
+
+### 4. Predecir Próximo Celo (Multimodal)
+GET http://localhost:8003/api/v1/forecasting/predict/{cattle_id}
+
+Response:
+{
+  "cattle_id": "508570c8-a218-4761-9402-bba87740b874",
+  "last_heat_date": "2025-11-20",
+  "predicted_days_rf": 21.3,
+  "predicted_days_xgb": 20.8,
+  "predicted_days_avg": 21.0,
+  "predicted_next_heat_date": "2025-12-11",
+  "days_until_heat": -3,
+  "total_heat_records": 5,
+  "model_confidence": "high"
+}
+
+
+## CURL EXAMPLES
+
+# Entrenar forecasting
+curl -X POST http://localhost:8003/api/v1/forecasting/train
+
+# Predecir celo
+curl http://localhost:8003/api/v1/forecasting/predict/508570c8-a218-4761-9402-bba87740b874
+
+
+## FLUJO DE USO
+
+1. Insertar datos de heat_events en la BD
+2. POST /api/v1/forecasting/train (entrenar modelos)
+3. GET /api/v1/forecasting/predict/{cattle_id} (predecir)
+
+
+## FEATURES UTILIZADAS (19 total)
+
+- Características de la vaca: age_days, weight, days_since_last_birth, breed
+- Lag 1 (último celo): allows_mounting, vaginal_discharge, vulva_swelling, comportamiento
+- Lag 2 (hace 2 celos): allows_mounting, vaginal_discharge, vulva_swelling, comportamiento
+- Lag 3 (hace 3 celos): allows_mounting, vaginal_discharge, vulva_swelling, comportamiento
+- Intervalos: interval_lag1, interval_lag2, avg_last_2_intervals
+
+
+## MODELOS
+
+- Random Forest: Robusto, interpretable
+- XGBoost: Alta precisión
+- Ensemble: Promedio de ambos (usado en la predicción final)
+
+
+## REQUISITOS
+
+- Mínimo 3 registros de celo por vaca
+- Mínimo 50 registros totales para entrenar
+- Datos completos: weight, breed, birth_date
+
+
+## EJECUTAR
+
+cd ml-service-final
+pip install -r requirements.txt
+python main.py
+
+# Puerto: 8003
+# Docs: http://localhost:8003/docs

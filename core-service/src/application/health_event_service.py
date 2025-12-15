@@ -6,6 +6,7 @@ from datetime import date
 
 from src.infrastructure.repositories.health_event_repository import HealthEventRepository
 from src.infrastructure.repositories.cattle_repository import CattleRepository
+from src.infrastructure.models.health_event import HealthEvent  # ✅ CORRECTO
 
 
 class HealthEventService:
@@ -28,7 +29,7 @@ class HealthEventService:
         dosage: Optional[str] = None,
         veterinarian_name: Optional[str] = None,
         notes: Optional[str] = None,
-    ):
+    ) -> HealthEvent:  # ✅ AGREGAR tipo de retorno
         """Crear nuevo evento de salud"""
         
         # Verificar que el cattle existe y pertenece al usuario
@@ -52,7 +53,7 @@ class HealthEventService:
         
         return event
 
-    def get_events_by_cattle(self, cattle_id: UUID, owner_id: UUID) -> List:
+    def get_events_by_cattle(self, cattle_id: UUID, owner_id: UUID) -> List[HealthEvent]:  # ✅ CORREGIR
         """Obtener todos los eventos de un animal"""
         
         # Verificar que el cattle pertenece al usuario
@@ -62,11 +63,11 @@ class HealthEventService:
         
         return self.health_repo.get_by_cattle(cattle_id)
 
-    def get_event_by_id(self, event_id: UUID) -> Optional:
+    def get_event_by_id(self, event_id: UUID) -> Optional[HealthEvent]:  # ✅ CORREGIR
         """Obtener evento por ID"""
         return self.health_repo.get_by_id(event_id)
 
-    def update_event(self, event_id: UUID, **updates) -> Optional:
+    def update_event(self, event_id: UUID, **updates) -> Optional[HealthEvent]:  # ✅ CORREGIR
         """Actualizar evento"""
         return self.health_repo.update(event_id, **updates)
 
@@ -74,7 +75,7 @@ class HealthEventService:
         """Eliminar evento"""
         return self.health_repo.delete(event_id)
 
-    def get_vaccines_by_cattle(self, cattle_id: UUID, owner_id: UUID) -> List:
+    def get_vaccines_by_cattle(self, cattle_id: UUID, owner_id: UUID) -> List[HealthEvent]:  # ✅ CORREGIR
         """Obtener solo vacunas de un animal"""
         
         cattle = self.cattle_repo.get_by_id_and_owner(cattle_id, owner_id)
@@ -83,7 +84,7 @@ class HealthEventService:
         
         return self.health_repo.get_vaccines_by_cattle(cattle_id)
 
-    def get_upcoming_doses(self, cattle_id: UUID, owner_id: UUID) -> List:
+    def get_upcoming_doses(self, cattle_id: UUID, owner_id: UUID) -> List[HealthEvent]:  # ✅ CORREGIR
         """Obtener próximas dosis"""
         
         cattle = self.cattle_repo.get_by_id_and_owner(cattle_id, owner_id)

@@ -36,3 +36,5 @@ class Cattle(Base):
     # Relaciones (solo internas a core-service)
     health_events = relationship("HealthEvent", back_populates="cattle", cascade="all, delete-orphan")
     reminders = relationship("Reminder", back_populates="cattle")
+    heat_events = relationship("HeatEventModel", back_populates="cattle", cascade="all, delete-orphan")
+
