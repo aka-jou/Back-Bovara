@@ -15,7 +15,6 @@ class CattleService:
 
     def create_cattle(
         self,
-        owner_id: UUID,
         name: str,
         lote: str,
         breed: Optional[str],
@@ -31,8 +30,9 @@ class CattleService:
         if existing:
             raise ValueError(f"Ya existe un animal con el lote {lote}")
         
+        # ✅ Sin owner_id - necesitas ajustar el repository.create() también
+        # Si tu tabla cattle REQUIERE owner_id, puedes usar un UUID fijo o NULL
         cattle = self.cattle_repo.create(
-            owner_id=owner_id,
             name=name,
             lote=lote,
             breed=breed,
@@ -44,54 +44,51 @@ class CattleService:
         
         return {"cattle": cattle}
 
-    def get_user_cattle(
+    def get_all_cattle(
         self,
-        owner_id: UUID,
         gender: Optional[str] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> dict:
-        """Obtener ganado del usuario con filtros"""
+        """Obtener todo el ganado con filtros"""
         
-        cattle_list = self.cattle_repo.get_by_owner(
-            owner_id=owner_id,
+        cattle_list = self.cattle_repo.get_all(
             gender=gender,
             skip=skip,
             limit=limit,
         )
         
-        total = self.cattle_repo.count_by_owner(owner_id, gender)
+        total = self.cattle_repo.count_all(gender)
         
         return {
             "total": total,
             "cattle": cattle_list,
         }
 
-    def get_cattle(self, cattle_id: UUID, owner_id: UUID) -> Optional:
+    def get_cattle(self, cattle_id: UUID) -> Optional:
         """Obtener animal específico"""
-        return self.cattle_repo.get_by_id_and_owner(cattle_id, owner_id)
+        return self.cattle_repo.get_by_id(cattle_id)
 
     def update_cattle(
         self,
         cattle_id: UUID,
-        owner_id: UUID,
         **updates
     ) -> Optional:
         """Actualizar animal"""
-        cattle = self.get_cattle(cattle_id, owner_id)
+        cattle = self.get_cattle(cattle_id)
         if not cattle:
             return None
         
         return self.cattle_repo.update(cattle_id, **updates)
 
-    def delete_cattle(self, cattle_id: UUID, owner_id: UUID) -> bool:
+    def delete_cattle(self, cattle_id: UUID) -> bool:
         """Eliminar animal"""
-        cattle = self.get_cattle(cattle_id, owner_id)
+        cattle = self.get_cattle(cattle_id)
         if not cattle:
             return False
         
         return self.cattle_repo.delete(cattle_id)
 
-    def search_by_lote(self, query: str, owner_id: UUID) -> List:
+    def search_by_lote(self, query: str) -> List:
         """Buscar por número de lote"""
-        return self.cattle_repo.search_by_lote(query, owner_id)
+        return self.cattle_repo.search_by_lote(query)

@@ -23,6 +23,49 @@ class ReminderRepository:
         """Obtener recordatorio por ID"""
         return self.db.query(Reminder).filter(Reminder.id == reminder_id).first()
 
+    # ✅ AGREGAR ESTOS MÉTODOS PÚBLICOS (sin user_id)
+    
+    def get_all(
+        self,
+        status: Optional[str] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[Reminder]:
+        """Obtener todos los recordatorios (sin filtro de user)"""
+        query = self.db.query(Reminder)
+        
+        if status:
+            query = query.filter(Reminder.status == status)
+        
+        if start_date:
+            query = query.filter(Reminder.reminder_date >= start_date)
+        
+        if end_date:
+            query = query.filter(Reminder.reminder_date <= end_date)
+        
+        return query.order_by(Reminder.reminder_date).offset(skip).limit(limit).all()
+
+    def get_today_reminders(self) -> List[Reminder]:
+        """Obtener recordatorios de hoy (sin filtro de user)"""
+        from datetime import datetime
+        today = datetime.now().date()
+        
+        return (
+            self.db.query(Reminder)
+            .filter(
+                Reminder.reminder_date == today,
+                Reminder.status == "pending"
+            )
+            .order_by(Reminder.reminder_date)
+            .all()
+        )
+
+    # ============================================
+    # MÉTODOS CON USER_ID (legacy - puedes mantenerlos por compatibilidad)
+    # ============================================
+
     def get_by_user(
         self,
         user_id: UUID,
@@ -45,22 +88,6 @@ class ReminderRepository:
             query = query.filter(Reminder.reminder_date <= end_date)
         
         return query.order_by(Reminder.reminder_date).offset(skip).limit(limit).all()
-
-    def get_today_reminders(self, user_id: UUID) -> List[Reminder]:
-        """Obtener recordatorios de hoy"""
-        from datetime import datetime
-        today = datetime.now().date()
-        
-        return (
-            self.db.query(Reminder)
-            .filter(
-                Reminder.user_id == user_id,
-                Reminder.reminder_date == today,
-                Reminder.status == "pending"
-            )
-            .order_by(Reminder.reminder_date)
-            .all()
-        )
 
     def get_pending_reminders(self, user_id: UUID) -> List[Reminder]:
         """Obtener recordatorios pendientes"""

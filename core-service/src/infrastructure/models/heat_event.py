@@ -1,3 +1,4 @@
+# src/infrastructure/models/heat_event.py
 from sqlalchemy import Column, String, Boolean, Date, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -23,5 +24,5 @@ class HeatEventModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relación con cattle
-    cattle = relationship("CattleModel", back_populates="heat_events")
+    
+    cattle = relationship("Cattle", back_populates="heat_events")

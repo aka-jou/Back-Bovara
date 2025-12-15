@@ -6,7 +6,7 @@ class BcryptPasswordHasher(PasswordHasherPort):
     """Adaptador de salida - Hasher de contraseñas con bcrypt"""
     
     def __init__(self):
-        self._context = CryptContext(schemes=["argon2"], deprecated="auto")
+        self._context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     def hash(self, password: str) -> str:
         """Hashea una contraseña con bcrypt"""

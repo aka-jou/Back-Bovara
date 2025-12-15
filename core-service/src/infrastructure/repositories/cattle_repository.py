@@ -1,3 +1,4 @@
+# src/infrastructure/repositories/cattle_repository.py
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, List
@@ -57,13 +58,39 @@ class CattleRepository:
         
         return query.count()
 
-    def search_by_lote(self, query: str, owner_id: UUID) -> List[Cattle]:
-        """Buscar por lote"""
+    # ✅ AGREGAR ESTOS 3 MÉTODOS NUEVOS
+    
+    def get_all(
+        self,
+        gender: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[Cattle]:
+        """Obtener todo el ganado (sin filtro de owner)"""
+        query = self.db.query(Cattle)
+        
+        if gender:
+            query = query.filter(Cattle.gender == gender)
+        
+        return query.offset(skip).limit(limit).all()
+
+    def count_all(self, gender: Optional[str] = None) -> int:
+        """Contar todo el ganado (sin filtro de owner)"""
+        query = self.db.query(Cattle)
+        
+        if gender:
+            query = query.filter(Cattle.gender == gender)
+        
+        return query.count()
+
+    def search_by_lote(self, query: str) -> List[Cattle]:  # ✅ QUITAR owner_id
+        """Buscar por lote (sin filtro de owner)"""
         return self.db.query(Cattle).filter(
-            Cattle.owner_id == owner_id,
             Cattle.lote.ilike(f"%{query}%")
         ).all()
 
+    # Métodos update y delete ya están bien
+    
     def update(self, cattle_id: UUID, **updates) -> Optional[Cattle]:
         """Actualizar animal"""
         cattle = self.get_by_id(cattle_id)

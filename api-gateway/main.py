@@ -5,10 +5,13 @@ from fastapi.responses import JSONResponse
 import httpx
 import logging
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 app = FastAPI(title="Bovara API Gateway", version="1.0.0")
+
 
 # CORS
 app.add_middleware(
@@ -19,10 +22,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # URLs de servicios
 AUTH_SERVICE_URL = "http://localhost:8000"
 CORE_SERVICE_URL = "http://localhost:8001"
+CHATBOT_SERVICE_URL = "http://localhost:3001"  # ✅ AGREGADO
 REQUEST_TIMEOUT = 30.0
+
 
 
 @app.get("/")
@@ -35,9 +41,10 @@ async def root():
     }
 
 
+
 @app.get("/health")
 async def health_check():
-    """Health check del gateway - NO REDIRIGE"""
+    """Health check del gateway"""
     services_status = {}
     
     # Check Auth Service
@@ -56,10 +63,19 @@ async def health_check():
     except:
         services_status["core_service"] = "unreachable"
     
+    # ✅ Check Chatbot Service
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{CHATBOT_SERVICE_URL}/api/v1/chat/health")
+            services_status["chatbot_service"] = "healthy" if response.status_code == 200 else "unhealthy"
+    except:
+        services_status["chatbot_service"] = "unreachable"
+    
     return {
         "gateway": "healthy",
         "services": services_status
     }
+
 
 
 @app.api_route(
@@ -100,12 +116,53 @@ async def auth_proxy(request: Request, path: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+# ✅✅✅ AGREGADO: Proxy para Chatbot Service
+@app.api_route(
+    "/api/v1/chat/{path:path}",
+    methods=["GET", "POST", "PUT", "DELETE", "PATCH"]
+)
+async def chatbot_proxy(request: Request, path: str):
+    """Proxy para Chatbot Service - Solo /api/v1/chat/*"""
+    try:
+        target_url = f"{CHATBOT_SERVICE_URL}/api/v1/chat/{path}"
+        logger.info(f"🤖 [CHATBOT] {request.method} /api/v1/chat/{path}")
+        
+        headers = dict(request.headers)
+        headers.pop("host", None)
+        body = await request.body()
+        
+        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+            response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                content=body,
+                params=request.query_params
+            )
+        
+        logger.info(f"✅ [CHATBOT] {response.status_code}")
+        
+        return JSONResponse(
+            content=response.json() if response.content else {},
+            status_code=response.status_code
+        )
+    
+    except httpx.ConnectError:
+        logger.error("❌ Chatbot Service no disponible")
+        raise HTTPException(status_code=503, detail="Chatbot Service no disponible")
+    except Exception as e:
+        logger.error(f"❌ Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @app.api_route(
     "/api/v1/{path:path}",
     methods=["GET", "POST", "PUT", "DELETE", "PATCH"]
 )
 async def core_proxy(request: Request, path: str):
-    """Proxy para Core Service - Todo /api/v1/* EXCEPTO /api/v1/auth/*"""
+    """Proxy para Core Service - Todo /api/v1/* EXCEPTO /api/v1/auth/* y /api/v1/chat/*"""
     try:
         target_url = f"{CORE_SERVICE_URL}/api/v1/{path}"
         logger.info(f"🟢 [CORE] {request.method} /api/v1/{path}")
@@ -136,6 +193,7 @@ async def core_proxy(request: Request, path: str):
     except Exception as e:
         logger.error(f"❌ Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":

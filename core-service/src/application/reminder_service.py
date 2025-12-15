@@ -14,17 +14,15 @@ class ReminderService:
 
     def create_reminder(
         self,
-        user_id: UUID,
         title: str,
         reminder_date: date,
         reminder_type: str,
         cattle_id: Optional[UUID] = None,
         description: Optional[str] = None,
     ):
-        """Crear nuevo recordatorio"""
+        """Crear nuevo recordatorio (sin user_id)"""
         
         reminder = self.reminder_repo.create(
-            user_id=user_id,
             cattle_id=cattle_id,
             title=title,
             description=description,
@@ -35,18 +33,16 @@ class ReminderService:
         
         return reminder
 
-    def get_user_reminders(
+    def get_all_reminders(
         self,
-        user_id: UUID,
         status: Optional[str] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List:
-        """Obtener recordatorios del usuario"""
-        return self.reminder_repo.get_by_user(
-            user_id=user_id,
+        """Obtener todos los recordatorios (sin filtro de user)"""
+        return self.reminder_repo.get_all(
             status=status,
             start_date=start_date,
             end_date=end_date,
@@ -54,37 +50,37 @@ class ReminderService:
             limit=limit,
         )
 
-    def get_today_reminders(self, user_id: UUID) -> List:
-        """Obtener recordatorios de hoy"""
-        return self.reminder_repo.get_today_reminders(user_id)
+    def get_today_reminders(self) -> List:
+        """Obtener recordatorios de hoy (sin filtro de user)"""
+        return self.reminder_repo.get_today_reminders()
 
-    def get_reminder(self, reminder_id: UUID, user_id: UUID) -> Optional:
-        """Obtener recordatorio específico"""
-        return self.reminder_repo.get_by_id_and_user(reminder_id, user_id)
+    def get_reminder(self, reminder_id: UUID) -> Optional:
+        """Obtener recordatorio específico (sin filtro de user)"""
+        return self.reminder_repo.get_by_id(reminder_id)
 
-    def update_reminder(self, reminder_id: UUID, user_id: UUID, **updates) -> Optional:
+    def update_reminder(self, reminder_id: UUID, **updates) -> Optional:
         """Actualizar recordatorio"""
         
-        # Verificar que pertenece al usuario
-        reminder = self.get_reminder(reminder_id, user_id)
+        # Verificar que existe
+        reminder = self.get_reminder(reminder_id)
         if not reminder:
             return None
         
         return self.reminder_repo.update(reminder_id, **updates)
 
-    def complete_reminder(self, reminder_id: UUID, user_id: UUID) -> Optional:
+    def complete_reminder(self, reminder_id: UUID) -> Optional:
         """Marcar como completado"""
         
-        reminder = self.get_reminder(reminder_id, user_id)
+        reminder = self.get_reminder(reminder_id)
         if not reminder:
             return None
         
         return self.reminder_repo.mark_completed(reminder_id)
 
-    def delete_reminder(self, reminder_id: UUID, user_id: UUID) -> bool:
+    def delete_reminder(self, reminder_id: UUID) -> bool:
         """Eliminar recordatorio"""
         
-        reminder = self.get_reminder(reminder_id, user_id)
+        reminder = self.get_reminder(reminder_id)
         if not reminder:
             return False
         

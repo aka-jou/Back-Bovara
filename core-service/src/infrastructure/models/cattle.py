@@ -18,7 +18,7 @@ class Cattle(Base):
     __tablename__ = "cattle"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    owner_id = Column(UUID(as_uuid=True), nullable=False, index=True)  # ✅ SIN ForeignKey
+    owner_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     # Datos básicos
     name = Column(String(100), nullable=False)

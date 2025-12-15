@@ -1,9 +1,8 @@
-# src/schemas/cattle.py
-from pydantic import BaseModel, Field, ConfigDict
-from datetime import date, datetime
+from pydantic import BaseModel
 from typing import Optional
-from enum import Enum
 from uuid import UUID
+from datetime import date, datetime
+from enum import Enum
 
 
 class GenderEnum(str, Enum):
@@ -11,37 +10,41 @@ class GenderEnum(str, Enum):
     female = "female"
 
 
-class CattleBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    lote: str = Field(..., min_length=1, max_length=50)
-    breed: Optional[str] = Field(None, max_length=100)
+class CattleCreate(BaseModel):
+    name: str
+    lote: str
+    breed: Optional[str] = None
     gender: GenderEnum
     birth_date: Optional[date] = None
-    weight: Optional[float] = Field(None, ge=0)
+    weight: Optional[float] = None
     fecha_ultimo_parto: Optional[date] = None
-
-
-class CattleCreate(CattleBase):
-    pass
 
 
 class CattleUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    lote: Optional[str] = Field(None, min_length=1, max_length=50)
-    breed: Optional[str] = Field(None, max_length=100)
+    name: Optional[str] = None
+    lote: Optional[str] = None
+    breed: Optional[str] = None
     gender: Optional[GenderEnum] = None
     birth_date: Optional[date] = None
-    weight: Optional[float] = Field(None, ge=0)
+    weight: Optional[float] = None
     fecha_ultimo_parto: Optional[date] = None
 
 
-class CattleResponse(CattleBase):
+class CattleResponse(BaseModel):
     id: UUID
-    owner_id: UUID
+    owner_id: Optional[UUID] = None  # ✅ CAMBIAR AQUÍ
+    name: str
+    lote: str
+    breed: Optional[str] = None
+    gender: GenderEnum
+    birth_date: Optional[date] = None
+    weight: Optional[float] = None
+    fecha_ultimo_parto: Optional[date] = None
     created_at: datetime
     updated_at: datetime
-    
-    model_config = ConfigDict(from_attributes=True)
+
+    class Config:
+        from_attributes = True
 
 
 class CattleListResponse(BaseModel):

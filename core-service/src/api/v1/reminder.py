@@ -12,16 +12,11 @@ from src.schemas.reminder import (
     ReminderUpdate,
     ReminderResponse,
 )
-# from src.infrastructure.auth.dependencies import get_current_user  # ❌ COMENTADO
-
 
 router = APIRouter(
     prefix="/reminders",
     tags=["Reminders"],
 )
-
-# ✅ User ID temporal
-TEMP_USER_ID = UUID("12345678-1234-5678-1234-567812345678")
 
 
 @router.post(
@@ -32,13 +27,11 @@ TEMP_USER_ID = UUID("12345678-1234-5678-1234-567812345678")
 async def create_reminder(
     reminder_data: ReminderCreate,
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
     """Crear recordatorio"""
     service = ReminderService(db)
     
     reminder = service.create_reminder(
-        user_id=TEMP_USER_ID,  # ✅ USANDO USER TEMPORAL
         **reminder_data.model_dump()
     )
     
@@ -56,13 +49,11 @@ async def get_reminders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
-    """Listar recordatorios del usuario"""
+    """Listar todos los recordatorios"""
     service = ReminderService(db)
     
-    reminders = service.get_user_reminders(
-        user_id=TEMP_USER_ID,  # ✅ USANDO USER TEMPORAL
+    reminders = service.get_all_reminders(
         status=status,
         start_date=start_date,
         end_date=end_date,
@@ -79,11 +70,10 @@ async def get_reminders(
 )
 async def get_today_reminders(
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
     """Obtener recordatorios de hoy"""
     service = ReminderService(db)
-    return service.get_today_reminders(TEMP_USER_ID)  # ✅ USANDO USER TEMPORAL
+    return service.get_today_reminders()
 
 
 @router.get(
@@ -93,11 +83,10 @@ async def get_today_reminders(
 async def get_reminder(
     reminder_id: UUID,
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
     """Obtener recordatorio específico"""
     service = ReminderService(db)
-    reminder = service.get_reminder(reminder_id, TEMP_USER_ID)  # ✅ USANDO USER TEMPORAL
+    reminder = service.get_reminder(reminder_id)
     
     if not reminder:
         raise HTTPException(
@@ -116,13 +105,12 @@ async def update_reminder(
     reminder_id: UUID,
     reminder_data: ReminderUpdate,
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
     """Actualizar recordatorio"""
     service = ReminderService(db)
     
     update_dict = reminder_data.model_dump(exclude_unset=True)
-    reminder = service.update_reminder(reminder_id, TEMP_USER_ID, **update_dict)  # ✅ USANDO USER TEMPORAL
+    reminder = service.update_reminder(reminder_id, **update_dict)
     
     if not reminder:
         raise HTTPException(
@@ -140,11 +128,10 @@ async def update_reminder(
 async def complete_reminder(
     reminder_id: UUID,
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
     """Marcar recordatorio como completado"""
     service = ReminderService(db)
-    reminder = service.complete_reminder(reminder_id, TEMP_USER_ID)  # ✅ USANDO USER TEMPORAL
+    reminder = service.complete_reminder(reminder_id)
     
     if not reminder:
         raise HTTPException(
@@ -162,11 +149,10 @@ async def complete_reminder(
 async def delete_reminder(
     reminder_id: UUID,
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user),  # ❌ COMENTADO
 ):
     """Eliminar recordatorio"""
     service = ReminderService(db)
-    deleted = service.delete_reminder(reminder_id, TEMP_USER_ID)  # ✅ USANDO USER TEMPORAL
+    deleted = service.delete_reminder(reminder_id)
     
     if not deleted:
         raise HTTPException(
